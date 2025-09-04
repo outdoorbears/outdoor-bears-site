@@ -1,0 +1,453 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="徳島県那賀川でスリリングなラフティング体験！OUTDOOR BEARSで仲間や家族と最高の思い出を。">
+  <meta property="og:title" content="OUTDOOR BEARS - 徳島の大自然で冒険を">
+  <meta property="og:description" content="那賀川でラフティングやアウトドア体験！家族や仲間と最高の思い出を。">
+  <meta property="og:image" content="images/rafting1.jpg">
+  <meta property="og:type" content="website">
+  <link rel="preload" href="images/rafting1.jpg" as="image">
+  <title>OUTDOOR BEARS - 徳島の大自然で冒険を</title>
+  <link rel="stylesheet" href="dist/styles.css">
+  <style>
+    .logo {
+      max-width: 60px;
+      height: auto;
+    }
+    .gallery-img {
+      max-width: 100%;
+      max-height: 120px;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      border-radius: 8px;
+    }
+    .gallery-img:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+    .map-container {
+      max-width: 800px;
+      margin: 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .gallery-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .tour-image {
+      max-width: 100%;
+      height: auto;
+      margin: 12px auto;
+      border-radius: 8px;
+    }
+    .hero-section {
+      position: relative;
+      height: 500px;
+      overflow: hidden;
+      background-color: #1f2937;
+    }
+    .hero-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    .hero-image.active {
+      opacity: 1;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      color: #f3f4f6;
+      text-align: center;
+      padding: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero-content h1 {
+      animation: fadeIn 1s ease-in;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .hero-content p {
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      max-width: 90%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: #f3f4f6;
+      font-size: 36px;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .close:hover {
+      color: #2563eb;
+    }
+    nav a:focus {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    #mobile-menu {
+      transition: max-height 0.3s ease-in-out;
+      max-height: 0;
+      overflow: hidden;
+    }
+    #mobile-menu.open {
+      max-height: 500px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="font-sans bg-gray-50 text-gray-900">
+  <!-- ナビゲーション -->
+  <nav class="bg-gray-800 text-white p-4 sticky top-0 z-20 shadow-lg">
+    <div class="container mx-auto flex flex-wrap justify-between items-center">
+      <a href="#" class="text-3xl font-bold flex items-center">
+        <img src="images/logo.png" alt="OUTDOOR BEARS ロゴ" class="logo" onerror="this.src='images/fallback.png'">
+        <span class="ml-2">OUTDOOR BEARS</span>
+      </a>
+      <button class="md:hidden text-2xl" onclick="toggleMenu()">☰</button>
+      <div id="mobile-menu" class="w-full md:w-auto md:flex space-x-6 mt-2 md:mt-0 hidden">
+        <a href="#services" class="block hover:text-blue-400 transition">サービス紹介</a>
+        <a href="#pricing" class="block hover:text-blue-400 transition">料金案内</a>
+        <a href="#gallery" class="block hover:text-blue-400 transition">ギャラリー</a>
+        <a href="#tour-flow" class="block hover:text-blue-400 transition">ツアーの流れ</a>
+        <a href="#faq" class="block hover:text-blue-400 transition">FAQ</a>
+        <a href="#booking" class="block hover:text-blue-400 transition">予約</a>
+        <a href="#access" class="block hover:text-blue-400 transition">アクセス</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ヒーローセクション -->
+  <section class="hero-section" id="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="text-6xl md:text-7xl font-extrabold mb-6 leading-tight">家族と仲間、最高の夏の思い出をOUTDOOR BEARSで</h1>
+      <p class="text-2xl mb-8 leading-relaxed">那賀川の壮大な自然の中でラフティングやアウトドア体験を！<br>【ネット予約OK】</p>
+      <a href="#booking" class="bg-blue-600 text-white px-8 py-4 rounded-full hover:bg-blue-700 text-lg font-semibold transition">今すぐ予約</a>
+    </div>
+    <img src="images/rafting1.jpg" alt="ラフティングの様子" class="hero-image active" id="hero-image-1">
+    <img src="images/rafting2.jpg" alt="ラフティングの瞬間" class="hero-image" id="hero-image-2">
+    <img src="images/nature.jpg" alt="那賀川の風景" class="hero-image" id="hero-image-3">
+    <img src="images/rafting3.jpg" alt="仲間とラフティング" class="hero-image" id="hero-image-4">
+      <img src="images/rafting4.jpg" alt="水しぶきの瞬間" class="hero-image" id="hero-image-5">
+  <img src="images/rafting5.jpg" alt="飛び込みの瞬間" class="hero-image" id="hero-image-6">
+  <img src="images/rafting6.jpg" alt="パドルを挙げる瞬間" class="hero-image" id="hero-image-7">
+  <img src="images/rafting7.jpg" alt="ラフティング体験" class="hero-image" id="hero-image-8">
+
+  </section>
+
+  <!-- サービス紹介 -->
+  <section id="services" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">サービス紹介</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-gray-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">ラフティング</h3>
+          <p class="text-lg">那賀川の清流を下るスリリングなラフティング体験！初心者から上級者まで楽しめるコースをご用意。経験豊富なガイドが安全にサポートします。</p>
+        </div>
+        <div class="bg-gray-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">SUP・パックラフト（来年度開始予定）</h3>
+          <p class="text-lg">スタンドアップパドル（SUP）や軽量なパックラフトで、ゆったりとした川下りや冒険をお楽しみいただけます。詳細は2026年春に発表予定！</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 料金案内 -->
+  <section id="pricing" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">料金案内</h2>
+      <div class="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
+        <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">半日ラフティングコース</h3>
+          <p class="text-3xl font-bold mb-4">1人：6,000円～</p>
+          <p class="text-lg mb-4">(大人・子ども関係なし)</p>
+          <p class="text-lg">所要時間：約3時間<br>含まれるもの：装備一式、ガイド料、保険</p>
+          <p class="mt-4 text-lg">追加オプション：<br>ツアー中の写真（別売り）：1,000円<br>シューズレンタル：300円</p>
+        </div>
+      </div>
+      <p class="text-center mt-8 text-sm">※料金は税込です。1日コースは現在検討中です。詳細なスケジュールやキャンセルポリシーは<a href="https://www.jalan.net/kankou/spt_guide000000229050/" class="text-blue-600 hover:underline" rel="noopener noreferrer">予約ページ</a>でご確認ください。</p>
+    </div>
+  </section>
+
+  <!-- ギャラリー -->
+  <section id="gallery" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">ギャラリー</h2>
+      <div class="gallery-container">
+        <img src="images/rafting1.jpg" alt="ラフティングの様子" class="gallery-img" loading="lazy" onclick="openModal('images/rafting1.jpg')">
+        <img src="images/rafting2.jpg" alt="ラフティングの瞬間" class="gallery-img" loading="lazy" onclick="openModal('images/rafting2.jpg')">
+        <img src="images/nature.jpg" alt="那賀川の風景" class="gallery-img" loading="lazy" onclick="openModal('images/nature.jpg')">
+        <img src="images/rafting3.jpg" alt="仲間とラフティング" class="gallery-img" loading="lazy" onclick="openModal('images/rafting3.jpg')">
+        <img src="images/rafting4.jpg" alt="水しぶきの瞬間" class="gallery-img" loading="lazy" onclick="openModal('images/rafting4.jpg')">
+        <img src="images/rafting5.jpg" alt="飛び込みの瞬間" class="gallery-img" loading="lazy" onclick="openModal('images/rafting5.jpg')">
+        <img src="images/rafting6.jpg" alt="パドルを挙げる瞬間" class="gallery-img" loading="lazy" onclick="openModal('images/rafting6.jpg')">
+        <img src="images/rafting7.jpg" alt="ラフティング体験" class="gallery-img" loading="lazy" onclick="openModal('images/rafting7.jpg')">
+      </div>
+      <p class="text-center mt-6"><a href="/gallery" class="text-blue-600 hover:underline text-lg">写真をもっとみる</a></p>
+    </div>
+  </section>
+
+  <!-- ツアーの流れ -->
+  <section id="tour-flow" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">ツアーの流れ</h2>
+      <div class="space-y-12">
+        <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">1. 受付・着替え</h3>
+          <p class="text-lg">受付場所に集合（集合時間は予約時に確認）。必要な持ち物（水着、タオル、着替え、濡れても良い靴）の確認後、参加承諾書の記入を行い、更衣室で着替えを完了します。スタッフがサポートいたします。</p>
+          <img src="images/step1.jpg" alt="受付の様子" class="tour-image" loading="lazy">
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">2. 移動</h3>
+          <p class="text-lg">こちらの専用車両でスタートポイントへ約10分で移動。道中、那賀川の美しい自然や川の風景お楽しみいただけます。移動中もガイドがツアーの概要を説明します。</p>
+          <img src="images/step2.jpg" alt="移動の様子" class="tour-image" loading="lazy">
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">3. 安全説明</h3>
+          <p class="text-lg">河原に到着後、ガイドがラフティングの注意点や操船の基本を説明。ライフジャケットやヘルメットの正しい着用方法を指導し、参加者からの質問にもお答えします。安全第一で進めます。</p>
+          <img src="images/step3.jpg" alt="安全説明の様子" class="tour-image" loading="lazy">
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-600">4. ラフティング開始！</h3>
+          <p class="text-lg">ボートに乗り込んでラフティングに出発！ガイドが常にサポートしながら、激流や穏やかな流れを満喫。安全なエリアでは写真撮影のチャンスも。アドレナリン全開の体験をお楽しみください！</p>
+          <img src="images/step4.jpg" alt="ラフティングの様子" class="tour-image" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">よくある質問（FAQ）</h2>
+      <div class="space-y-6">
+        <div class="bg-gray-100 p-8 rounded-xl shadow-lg">
+          <h3 class="text-xl font-semibold mb-3 text-blue-600">必要な持ち物は何ですか？</h3>
+          <p class="text-lg">水着、タオル、着替え、濡れても良い靴（サンダル可）をご持参ください。装備（ヘルメット、ライフジャケット）はこちらで用意します。</p>
+        </div>
+        <div class="bg-gray-100 p-8 rounded-xl shadow-lg">
+          <h3 class="text-xl font-semibold mb-3 text-blue-600">キャンセルポリシーは？</h3>
+          <p class="text-lg">7日前までのキャンセルは無料、3日前までは50%、それ以降は100%のキャンセル料がかかります。詳細は予約時にご確認ください。</p>
+        </div>
+        <div class="bg-gray-100 p-8 rounded-xl shadow-lg">
+          <h3 class="text-xl font-semibold mb-3 text-blue-600">初心者でも参加できますか？</h3>
+          <p class="text-lg">もちろんです！初心者向けのコースがあり、経験豊富なガイドが丁寧に指導します。安全第一で楽しい体験をお約束します。</p>
+        </div>
+        <div class="bg-gray-100 p-8 rounded-xl shadow-lg">
+          <h3 class="text-xl font-semibold mb-3 text-blue-600">小学生以下の子どもも一緒に体験したいです</h3>
+          <p class="text-lg">4歳以上のお子様は保護者同伴で参加可能です。コースは年齢に応じて調整しますので、詳細はお問い合わせください。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 予約・お問い合わせ -->
+  <section id="booking" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">予約・お問い合わせ</h2>
+      <p class="text-center mb-6 text-lg">【ネット予約OK】<br>じゃらんでご予約いただけます。<br><a href="https://www.jalan.net/kankou/spt_guide000000229050/" class="text-blue-600 hover:underline" rel="noopener noreferrer">予約プラン一覧を確認する</a></p>
+      <p class="text-center mb-6 text-lg">お問い合わせ：<span data-contact="phone">090-4564-1879</span><br>（じゃらん観光ガイドを見たと伝えるとスムーズです）</p>
+      <p class="text-center mb-6 text-lg">メール：<a href="/cdn-cgi/l/email-protection#b79e999198b7988283939898859592968584d994989a" class="text-blue-600 hover:underline"><span class="__cf_email__" data-cfemail="8ce7e0e8e1cce1fbfaeae1e1fcecebeffcfda0ede1e3">[email&#160;protected]</span></a></p>
+      <div class="text-center mt-6">
+        <a href="https://www.jalan.net/kankou/spt_guide000000229050/" class="bg-blue-600 text-white px-8 py-4 rounded-full hover:bg-blue-700 text-lg font-semibold transition" rel="noopener noreferrer">予約ページへ</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- アクセス -->
+  <section id="access" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">アクセス</h2>
+      <p class="text-center mb-6 text-lg">徳島県内のラフティング拠点へのアクセス情報をご案内します。</p>
+      <div class="bg-gray-100 p-8 rounded-xl shadow-lg text-center">
+        <h3 class="text-2xl font-semibold mb-4 text-blue-600">OUTDOOR BEARS ベース</h3>
+        <p class="text-lg">住所：〒771-5203 徳島県那賀郡那賀町和食郷田野１０５−１</p>
+        <p class="text-lg">アクセス：徳島市内から車で約1時間</p>
+        <p class="text-lg">駐車場：専用駐車場あり（無料、3台）</p>
+        <div class="mt-6 map-container">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3313.0607767986817!2d134.49945397474588!3d33.86232452773627!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x355305730e024841%3A0x328de04a576a58c0!2z44Ki44Km44OI44OJ44KiIOODmeOCouODvOOCug!5e0!3m2!1sja!2sjp!4v1754632780015!5m2!1sja!2sjp" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- フッター -->
+  <footer class="bg-gray-800 text-white py-8">
+    <div class="container mx-auto px-4 text-center">
+      <p>&copy; 2025 OUTDOOR BEARS. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- モーダル -->
+  <div id="modal" class="modal" role="dialog" aria-labelledby="modal-title">
+    <span class="close" onclick="closeModal()" aria-label="モーダルを閉じる">&times;</span>
+    <img id="modal-image" class="modal-content" src="" alt="拡大画像">
+  </div>
+
+  <!-- Cloudflareのメールアドレス難読化スクリプト -->
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+  <script>
+    const galleryImages = [
+      'images/rafting1.jpg',
+      'images/rafting2.jpg',
+      'images/nature.jpg',
+      'images/rafting3.jpg',
+      'images/rafting4.jpg',
+      'images/rafting5.jpg',
+      'images/rafting6.jpg',
+      'images/rafting7.jpg'
+    ];
+
+    let currentImageIndex = 0;
+
+    function setHeroImage() {
+      const images = document.querySelectorAll('.hero-image');
+      images.forEach(img => img.classList.remove('active'));
+      document.getElementById(`hero-image-${currentImageIndex + 1}`).classList.add('active');
+      currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+    }
+
+    function startSlideshow() {
+      setHeroImage();
+      setInterval(setHeroImage, 5000);
+    }
+
+    function openModal(imageSrc) {
+      const modal = document.getElementById('modal');
+      const modalImage = document.getElementById('modal-image');
+      modalImage.src = imageSrc;
+      modal.style.display = 'flex';
+      modal.focus();
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.style.display = 'none';
+    }
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+      menu.classList.toggle('open');
+    }
+
+    // スライドショーを開始
+    startSlideshow();
+
+    // モーダル外をクリックで閉じる
+    window.onclick = function(event) {
+      const modal = document.getElementById('modal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+
+    // Escキーでモーダルを閉じる
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "OUTDOOR BEARS",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "和食郷田野１０５−１",
+      "addressLocality": "那賀郡那賀町",
+      "addressRegion": "徳島県",
+      "postalCode": "771-5203",
+      "addressCountry": "JP"
+    },
+    "telephone": "090-4564-1879",
+    "description": "徳島県那賀川でラフティング体験を提供するOUTDOOR BEARS。家族や仲間と自然の中で冒険を楽しめます。"
+  }
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97994960f857d3f6',t:'MTc1Njk0NDg2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
